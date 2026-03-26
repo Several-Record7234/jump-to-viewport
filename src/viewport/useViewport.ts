@@ -71,13 +71,14 @@ const getPlayerImages = async (nonGMids: string[]) => {
     );
 };
 
+const defaultSceneMetadata: SceneMetadata = {
+    [metadataId]: { starredViewports: [], filters: {} },
+};
+
 export const useViewport = () => {
     const currentUser = usePlayerContext();
     const { id: currentUserId } = currentUser;
     const { nonGMPlayers } = usePartyContext();
-    const defaultSceneMetadata: SceneMetadata = {
-        [metadataId]: { starredViewports: [], filters: {} },
-    };
     const [metadata, setMetadata] = useState<SceneMetadata>(defaultSceneMetadata);
     useEffect(() => {
         const fetchMetadata = async () => {
@@ -93,12 +94,9 @@ export const useViewport = () => {
     }, []);
     useEffect(() => {
         return OBR.scene.onMetadataChange((m) => {
-            const obrMetadata = m as unknown as SceneMetadata;
-            // metadata is locked to default in this useEffect
-            // so use callback in setMetadata
-            if (!currentUserId) {
-                return;
-            }
+            // Validate before trusting data from the SDK
+            if (!validMetadata(m)) return;
+            const obrMetadata = m;
             setMetadata((prev) => {
                 if (JSON.stringify(obrMetadata[metadataId]) !== JSON.stringify(prev[metadataId])) {
                     return starred(obrMetadata).length || Object.keys(filters(obrMetadata)).length
@@ -108,7 +106,7 @@ export const useViewport = () => {
                 return prev;
             });
         });
-    }, []);
+    }, [currentUserId]);
 
     const starViewport = async (viewportName: string) => {
         const trimmed = viewportName.trim();
