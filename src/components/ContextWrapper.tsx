@@ -13,7 +13,7 @@ export const ContextWrapper = (props: PropsWithChildren) => {
         if (OBR.isAvailable) {
             OBR.onReady(async () => {
                 setReady(true);
-                const [role, id, color, syncView, metadata, connectionId, selection, name] =
+                const [role, id, color, syncView, metadata, connectionId, selection, name, party] =
                     await Promise.all([
                         OBR.player.getRole(),
                         OBR.player.getId(),
@@ -23,9 +23,10 @@ export const ContextWrapper = (props: PropsWithChildren) => {
                         OBR.player.getConnectionId(),
                         OBR.player.getSelection(),
                         OBR.player.getName(),
+                        OBR.party.getPlayers(),
                     ]);
                 setPlayer({ role, id, color, syncView, metadata, connectionId, selection, name });
-                setParty(await OBR.party.getPlayers());
+                setParty(party);
             });
         }
     }, []);

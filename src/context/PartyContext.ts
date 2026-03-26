@@ -16,7 +16,7 @@ export const usePartyContext = (): PartyContextType => {
     }
     useEffect(() => {
         return OBR.party.onChange((party) => partyContext.setPlayers(party));
-    });
+    }, []);
 
     return partyContext;
 };

@@ -13,13 +13,15 @@ export const PluginGate = ({ children }: { children: ReactNode }) => {
     }, []);
 
     useEffect(() => {
+        if (!OBR.isAvailable) return;
         const initIsReady = async () => {
             setIsReady(await OBR.scene.isReady());
         };
-        OBR.scene.onReadyChange(async (ready) => {
+        const unsubscribe = OBR.scene.onReadyChange((ready) => {
             setIsReady(ready);
         });
         initIsReady();
+        return unsubscribe;
     }, []);
 
     if (ready) {
