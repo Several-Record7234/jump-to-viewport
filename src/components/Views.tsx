@@ -8,10 +8,15 @@ import { Icon } from './atoms/Icon.tsx';
 import { Button } from './atoms/Button.tsx';
 import { ControlGroup } from './ControlGroup.tsx';
 import { Help } from './Help.tsx';
+import { ErrorBoundary } from './ErrorBoundary.tsx';
 
 export const Views = () => {
     const { isReady } = useSceneReady();
-    return <ContextWrapper>{isReady ? <Content /> : 'loading'}</ContextWrapper>;
+    return (
+        <ErrorBoundary>
+            <ContextWrapper>{isReady ? <Content /> : 'loading'}</ContextWrapper>
+        </ErrorBoundary>
+    );
 };
 
 const Content = () => {
