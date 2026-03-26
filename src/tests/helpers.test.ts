@@ -7,7 +7,6 @@ import {
   isObject,
   validMetadata,
   isValidStar,
-  type Starred,
 } from "../helper/types";
 
 describe("metadataId", () => {
@@ -60,7 +59,7 @@ describe("isStarredBox", () => {
   });
 
   it("returns false when boundingCorners is missing", () => {
-    expect(isStarredBox({ id: "abc", name: "Test" } as unknown as Starred & Record<string, unknown>)).toBe(false);
+    expect(isStarredBox({ id: "abc", name: "Test" })).toBe(false);
   });
 
   it("returns false when corners have non-numeric coordinates", () => {
@@ -69,7 +68,7 @@ describe("isStarredBox", () => {
       name: "Test",
       boundingCorners: { max: { x: "ten", y: 10 }, min: { x: 0, y: 0 } },
     };
-    expect(isStarredBox(bad as unknown as Starred & Record<string, unknown>)).toBe(false);
+    expect(isStarredBox(bad)).toBe(false);
   });
 });
 

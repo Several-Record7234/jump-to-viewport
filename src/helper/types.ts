@@ -28,12 +28,11 @@ export type StarredBox = Starred & {
 
 export type ViewportHandler = (viewport: StarredLegacy | StarredBox) => Promise<void>;
 
-export const isStarredBox = (value: Starred & Record<string, unknown>): value is StarredBox => {
-    return (
-        isRecord(value.boundingCorners) &&
-        isVector2(value.boundingCorners.max) &&
-        isVector2(value.boundingCorners.min)
-    );
+export const isStarredBox = (value: unknown): value is StarredBox => {
+    if (!isRecord(value)) return false;
+    if (typeof value.id !== 'string' || !value.name) return false;
+    const corners = value.boundingCorners;
+    return isRecord(corners) && isVector2(corners.max) && isVector2(corners.min);
 };
 
 export function validMetadata(value: unknown): value is SceneMetadata {
