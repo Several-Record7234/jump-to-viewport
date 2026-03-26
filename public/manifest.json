@@ -1,12 +1,12 @@
 {
-  "name": "Viewport Presets",
-  "version": "1.0.1",
+  "name": "Views",
+  "version": "1.0.2",
   "manifest_version": 1,
-  "author": "Omar Benmegdoul",
+  "author": "Omar Benmegdoul and Andrew C",
   "description": "Easily save and jump to areas of a scene",
   "icon": "/icon.svg",
   "action": {
-    "title": "Viewport Presets",
+    "title": "Views",
     "icon": "/icon.svg",
     "popover": "/",
     "height": 400,
