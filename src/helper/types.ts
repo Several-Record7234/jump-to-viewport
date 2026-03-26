@@ -4,7 +4,8 @@ export const metadataId = 'com.omarbenmegdoul.jumpToViewport3/metadata';
 export interface SceneMetadata {
     [metadataId]: {
         starredViewports: Array<StarredBox | StarredLegacy> | undefined;
-        filters: Record<string, UserFilter>;
+        /** @deprecated Filter state is now stored in localStorage. Present only for migration. */
+        filters?: Record<string, UserFilter>;
     };
 }
 
@@ -39,34 +40,6 @@ export function validMetadata(value: unknown): value is SceneMetadata {
     if (typeof value !== 'object' || value === null) return false;
     return metadataId in value && isViewportMetadata(value[metadataId]);
     // doesn't check filters
-}
-
-// Type guard for UserFilter
-function isUserFilter(obj: unknown): obj is UserFilter {
-    if (!isRecord(obj)) return false;
-    const hasAbsents = 'absents' in obj && typeof obj.absents === 'boolean';
-    const hasPlayers = 'players' in obj && isRecord(obj.players);
-    if (!hasAbsents || !hasPlayers) return false;
-    if (isRecord(obj.players)) {
-        for (const key in obj.players) {
-            if (typeof obj.players[key] !== 'boolean') {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-// Type guard for the filters key in SceneMetadata
-// unused :(
-export function isValidFiltersKey(obj: unknown): obj is Record<string, UserFilter> {
-    if (!isRecord(obj)) return false;
-    for (const key in obj) {
-        if (!isUserFilter(obj[key])) {
-            return false;
-        }
-    }
-    return true;
 }
 
 export function isViewportMetadata(value: unknown): value is SceneMetadata[typeof metadataId] {

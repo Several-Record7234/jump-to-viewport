@@ -4,6 +4,7 @@ import {
     SceneMetadata,
     StarredBox,
     StarredLegacy,
+    UserFilter,
     isStarredBox,
     isStarredLegacy,
     metadataId,
@@ -22,7 +23,31 @@ const reset = async () => {
 const starred = (metadata: SceneMetadata | null) =>
     metadata && metadata[metadataId].starredViewports ? metadata[metadataId].starredViewports : [];
 
-const filters = (metadata: SceneMetadata | null) => metadata?.[metadataId]?.filters || {};
+const defaultFilters: UserFilter = { players: {}, absents: true };
+
+const filtersKey = (userId: string) => `views:filters:${userId}`;
+
+const readLocalFilters = (userId: string): UserFilter => {
+    try {
+        const raw = localStorage.getItem(filtersKey(userId));
+        if (!raw) return { ...defaultFilters };
+        const parsed: unknown = JSON.parse(raw);
+        if (typeof parsed !== 'object' || parsed === null) return { ...defaultFilters };
+        const p = parsed as Record<string, unknown>;
+        return {
+            players: typeof p.players === 'object' && p.players !== null
+                ? (p.players as Record<string, boolean>)
+                : {},
+            absents: typeof p.absents === 'boolean' ? p.absents : true,
+        };
+    } catch {
+        return { ...defaultFilters };
+    }
+};
+
+const writeLocalFilters = (userId: string, filters: UserFilter) => {
+    localStorage.setItem(filtersKey(userId), JSON.stringify(filters));
+};
 
 const getViewportBounds = async () => {
     const [height, width, min] = await Promise.all([
@@ -72,7 +97,7 @@ const getPlayerImages = async (nonGMids: string[]) => {
 };
 
 const defaultSceneMetadata: SceneMetadata = {
-    [metadataId]: { starredViewports: [], filters: {} },
+    [metadataId]: { starredViewports: [] },
 };
 
 export const useViewport = () => {
@@ -80,11 +105,21 @@ export const useViewport = () => {
     const { id: currentUserId } = currentUser;
     const { nonGMPlayers } = usePartyContext();
     const [metadata, setMetadata] = useState<SceneMetadata>(defaultSceneMetadata);
+    const [localFilters, setLocalFilters] = useState<UserFilter>(() =>
+        readLocalFilters(currentUserId),
+    );
     useEffect(() => {
         const fetchMetadata = async () => {
             const sceneMetadata = await OBR.scene.getMetadata();
             if (validMetadata(sceneMetadata)) {
                 setMetadata(sceneMetadata);
+                // One-way migration: if legacy filter data exists in metadata and
+                // localStorage is empty, copy it over then ignore metadata filters.
+                const legacyFilter = sceneMetadata[metadataId].filters?.[currentUserId];
+                if (legacyFilter && !localStorage.getItem(filtersKey(currentUserId))) {
+                    writeLocalFilters(currentUserId, legacyFilter);
+                    setLocalFilters(legacyFilter);
+                }
                 return;
             }
             // todo handle
@@ -99,9 +134,7 @@ export const useViewport = () => {
             const obrMetadata = m;
             setMetadata((prev) => {
                 if (JSON.stringify(obrMetadata[metadataId]) !== JSON.stringify(prev[metadataId])) {
-                    return starred(obrMetadata).length || Object.keys(filters(obrMetadata)).length
-                        ? obrMetadata
-                        : defaultSceneMetadata;
+                    return starred(obrMetadata).length ? obrMetadata : defaultSceneMetadata;
                 }
                 return prev;
             });
@@ -117,7 +150,6 @@ export const useViewport = () => {
 
         await OBR.scene.setMetadata({
             [metadataId]: {
-                filters: filters(metadata),
                 starredViewports: [
                     ...starred(metadata),
                     constructStarredBox({ currentUserId, viewportName: trimmed, min, max }),
@@ -130,7 +162,6 @@ export const useViewport = () => {
         await OBR.scene.setMetadata({
             [metadataId]: {
                 starredViewports: filtered.length ? filtered : undefined,
-                filters: filters(metadata),
             },
         });
     };
@@ -150,34 +181,19 @@ export const useViewport = () => {
         }
     };
 
-    const filterPlayer = async (filteredPlayerId: string, show: boolean) => {
-        const filtersWithUpdate = {
-            ...filters(metadata),
-            [currentUserId]: {
-                ...filters(metadata)[currentUserId],
-                players: {
-                    ...(filters(metadata)[currentUserId]?.players || {}),
-                    [filteredPlayerId]: show,
-                },
-            },
+    const filterPlayer = (filteredPlayerId: string, show: boolean) => {
+        const updated: UserFilter = {
+            ...localFilters,
+            players: { ...localFilters.players, [filteredPlayerId]: show },
         };
-
-        await OBR.scene.setMetadata({
-            [metadataId]: { starredViewports: starred(metadata), filters: filtersWithUpdate },
-        });
+        writeLocalFilters(currentUserId, updated);
+        setLocalFilters(updated);
     };
 
-    const filterAbsent = async (show: boolean) => {
-        const filtersWithUpdate = {
-            ...filters(metadata),
-            [currentUserId]: {
-                ...filters(metadata)[currentUserId],
-                absents: show,
-            },
-        };
-        await OBR.scene.setMetadata({
-            [metadataId]: { starredViewports: starred(metadata), filters: filtersWithUpdate },
-        });
+    const filterAbsent = (show: boolean) => {
+        const updated: UserFilter = { ...localFilters, absents: show };
+        writeLocalFilters(currentUserId, updated);
+        setLocalFilters(updated);
     };
 
     const overwriteViewport = async ({ id: idToBeOverwritten }: { id: string }) => {
@@ -191,7 +207,6 @@ export const useViewport = () => {
         const { min, max } = await getViewportBounds();
         await OBR.scene.setMetadata({
             [metadataId]: {
-                filters: filters(metadata),
                 starredViewports: [
                     ...starred(metadata).filter(({ id }) => id !== idToBeOverwritten),
                     constructStarredBox({
@@ -243,10 +258,9 @@ export const useViewport = () => {
         });
     };
 
-    // type problem here? should not need ?? {}
-    const filteredPlayerIds = Object.entries(filters(metadata)[currentUserId]?.players ?? {})
-        .filter(([_, v]) => !v)
-        .map(([k]) => k);
+    const filteredPlayerIds = Object.entries(localFilters.players)
+        .filter(([, show]) => !show)
+        .map(([id]) => id);
 
     return {
         starredViewports: starred(metadata),
@@ -258,6 +272,6 @@ export const useViewport = () => {
         filterAbsent,
         jumpToPlayerItems,
         filteredPlayerIds,
-        showAbsentPlayers: filters(metadata)?.[currentUserId]?.absents,
+        showAbsentPlayers: localFilters.absents,
     };
 };
