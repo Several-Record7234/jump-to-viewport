@@ -1,3 +1,1 @@
-export const mod = (n: number, m: number) => {
-    return ((n % m) + m) % m;
-};
+// No utilities currently — file retained for future additions.

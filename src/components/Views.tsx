@@ -1,6 +1,6 @@
 import { useViewport } from '../viewport/useViewport.ts';
 import { ContextWrapper } from './ContextWrapper.tsx';
-import { SceneReadyContext } from '../context/SceneReadyContext.ts';
+import { useSceneReady } from '../context/useSceneReady.ts';
 import { useState } from 'react';
 import { usePlayerContext } from '../context/PlayerContext.ts';
 import { usePartyContext } from '../context/PartyContext.ts';
@@ -10,7 +10,7 @@ import { ControlGroup } from './ControlGroup.tsx';
 import { Help } from './Help.tsx';
 
 export const Views = () => {
-    const { isReady } = SceneReadyContext();
+    const { isReady } = useSceneReady();
     return <ContextWrapper>{isReady ? <Content /> : 'loading'}</ContextWrapper>;
 };
 

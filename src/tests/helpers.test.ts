@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { mod } from "../helper/helpers";
 import {
   metadataId,
   isStarredBox,
@@ -10,23 +9,6 @@ import {
   isValidStar,
   type Starred,
 } from "../helper/types";
-
-describe("mod", () => {
-  it("returns correct modulo for positive numbers", () => {
-    expect(mod(7, 3)).toBe(1);
-    expect(mod(10, 5)).toBe(0);
-  });
-
-  it("returns positive modulo for negative numbers", () => {
-    // Standard JS % returns negative for negative n; mod() always returns >= 0
-    expect(mod(-1, 3)).toBe(2);
-    expect(mod(-4, 3)).toBe(2);
-  });
-
-  it("returns 0 when n is 0", () => {
-    expect(mod(0, 5)).toBe(0);
-  });
-});
 
 describe("metadataId", () => {
   it("is a non-empty string", () => {

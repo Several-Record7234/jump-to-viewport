@@ -5,7 +5,7 @@ export type SceneReady = {
     setIsReady: (ready: boolean) => void;
 };
 
-export const SceneReadyContext = create<SceneReady>()((set) => ({
+export const useSceneReady = create<SceneReady>()((set) => ({
     isReady: false,
     setIsReady: (ready) => set(() => ({ isReady: ready })),
 }));

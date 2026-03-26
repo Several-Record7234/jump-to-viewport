@@ -111,6 +111,10 @@ export const useViewport = () => {
     }, []);
 
     const starViewport = async (viewportName: string) => {
+        const trimmed = viewportName.trim();
+        if (!trimmed) throw new Error('Viewport name must not be blank');
+        if (starred(metadata).some((v) => v.name === trimmed))
+            throw new Error(`A viewport named "${trimmed}" already exists`);
         const { min, max } = await getViewportBounds();
 
         await OBR.scene.setMetadata({
@@ -118,7 +122,7 @@ export const useViewport = () => {
                 filters: filters(metadata),
                 starredViewports: [
                     ...starred(metadata),
-                    constructStarredBox({ currentUserId, viewportName, min, max }),
+                    constructStarredBox({ currentUserId, viewportName: trimmed, min, max }),
                 ],
             },
         });

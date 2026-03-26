@@ -1,10 +1,10 @@
 import { ReactNode, useEffect, useState } from 'react';
 import OBR from '@owlbear-rodeo/sdk';
-import { SceneReadyContext } from './SceneReadyContext.ts';
+import { useSceneReady } from './useSceneReady.ts';
 
 export const PluginGate = ({ children }: { children: ReactNode }) => {
     const [ready, setReady] = useState(false);
-    const { setIsReady } = SceneReadyContext();
+    const { setIsReady } = useSceneReady();
 
     useEffect(() => {
         if (OBR.isAvailable) {
