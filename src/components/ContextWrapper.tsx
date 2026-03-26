@@ -10,25 +10,26 @@ export const ContextWrapper = (props: PropsWithChildren) => {
     const [party, setParty] = useState<Player[] | null>(null);
 
     useEffect(() => {
-        if (OBR.isAvailable) {
-            OBR.onReady(async () => {
-                setReady(true);
-                const [role, id, color, syncView, metadata, connectionId, selection, name, party] =
-                    await Promise.all([
-                        OBR.player.getRole(),
-                        OBR.player.getId(),
-                        OBR.player.getColor(),
-                        OBR.player.getSyncView(),
-                        OBR.player.getMetadata(),
-                        OBR.player.getConnectionId(),
-                        OBR.player.getSelection(),
-                        OBR.player.getName(),
-                        OBR.party.getPlayers(),
-                    ]);
-                setPlayer({ role, id, color, syncView, metadata, connectionId, selection, name });
-                setParty(party);
-            });
-        }
+        if (!OBR.isAvailable) return;
+        OBR.onReady(async () => {
+            setReady(true);
+            const [role, id, color, syncView, metadata, connectionId, selection, name, party] =
+                await Promise.all([
+                    OBR.player.getRole(),
+                    OBR.player.getId(),
+                    OBR.player.getColor(),
+                    OBR.player.getSyncView(),
+                    OBR.player.getMetadata(),
+                    OBR.player.getConnectionId(),
+                    OBR.player.getSelection(),
+                    OBR.player.getName(),
+                    OBR.party.getPlayers(),
+                ]);
+            setPlayer({ role, id, color, syncView, metadata, connectionId, selection, name });
+            setParty(party);
+            // Keep player data current for the session (name, colour, role can change)
+            OBR.player.onChange((updatedPlayer) => setPlayer(updatedPlayer));
+        });
     }, []);
 
     if (ready) {
@@ -38,7 +39,7 @@ export const ContextWrapper = (props: PropsWithChildren) => {
                     <PartyContext.Provider
                         value={{
                             players: party,
-                            setPlayers: setParty,
+                            _setPlayers: setParty,
                             nonGMPlayers:
                                 [player, ...(party || [])].filter((player): player is Player =>
                                     Boolean(player && player.role !== 'GM'),

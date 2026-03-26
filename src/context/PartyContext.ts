@@ -3,8 +3,9 @@ import OBR, { Player } from '@owlbear-rodeo/sdk';
 
 export type PartyContextType = {
     players: Player[] | null;
-    setPlayers: (p: Player[]) => void;
     nonGMPlayers: Player[] | null;
+    /** Internal — used by ContextWrapper's party subscription only. */
+    _setPlayers: (p: Player[]) => void;
 };
 
 export const PartyContext = createContext<PartyContextType | null>(null);
@@ -15,7 +16,7 @@ export const usePartyContext = (): PartyContextType => {
         throw new Error('Party not yet set');
     }
     useEffect(() => {
-        return OBR.party.onChange((party) => partyContext.setPlayers(party));
+        return OBR.party.onChange((party) => partyContext._setPlayers(party));
     }, []);
 
     return partyContext;
