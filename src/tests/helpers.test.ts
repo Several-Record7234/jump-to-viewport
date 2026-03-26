@@ -8,6 +8,11 @@ import {
   validMetadata,
   isValidStar,
 } from "../helper/types";
+import {
+  deriveFilteredPlayerIds,
+  applyViewportDelete,
+  calcItemsBoundingBox,
+} from "../viewport/viewportHelpers";
 
 describe("metadataId", () => {
   it("is a non-empty string", () => {
@@ -133,5 +138,78 @@ describe("validMetadata", () => {
 
   it("returns false when metadataId key is absent", () => {
     expect(validMetadata({ other: {} })).toBe(false);
+  });
+});
+
+describe("deriveFilteredPlayerIds", () => {
+  it("returns IDs where show is false", () => {
+    expect(deriveFilteredPlayerIds({ a: false, b: true, c: false })).toEqual(["a", "c"]);
+  });
+
+  it("returns empty array when all players are shown", () => {
+    expect(deriveFilteredPlayerIds({ a: true, b: true })).toEqual([]);
+  });
+
+  it("returns empty array for empty filters", () => {
+    expect(deriveFilteredPlayerIds({})).toEqual([]);
+  });
+});
+
+describe("applyViewportDelete", () => {
+  const vp1 = {
+    id: "1", name: "A",
+    boundingCorners: { min: { x: 0, y: 0 }, max: { x: 1, y: 1 } },
+  };
+  const vp2 = {
+    id: "2", name: "B",
+    boundingCorners: { min: { x: 0, y: 0 }, max: { x: 1, y: 1 } },
+  };
+
+  it("removes the viewport with the given id", () => {
+    expect(applyViewportDelete([vp1, vp2], "1")).toEqual([vp2]);
+  });
+
+  it("returns undefined when the result would be empty", () => {
+    expect(applyViewportDelete([vp1], "1")).toBeUndefined();
+  });
+
+  it("returns the full array when the id is not found", () => {
+    expect(applyViewportDelete([vp1, vp2], "99")).toEqual([vp1, vp2]);
+  });
+});
+
+describe("calcItemsBoundingBox", () => {
+  const item = (px: number, py: number, w: number, h: number, sx = 1, sy = 1) => ({
+    image: { width: w, height: h },
+    scale: { x: sx, y: sy },
+    position: { x: px, y: py },
+  });
+
+  it("calculates bounds for a single centred item", () => {
+    expect(calcItemsBoundingBox([item(0, 0, 100, 100)])).toEqual({
+      min: { x: -50, y: -50 },
+      max: { x: 50, y: 50 },
+    });
+  });
+
+  it("calculates bounds across multiple items", () => {
+    expect(calcItemsBoundingBox([item(0, 0, 50, 50), item(100, 100, 50, 50)])).toEqual({
+      min: { x: -25, y: -25 },
+      max: { x: 125, y: 125 },
+    });
+  });
+
+  it("respects non-uniform scale", () => {
+    expect(calcItemsBoundingBox([item(0, 0, 100, 100, 2, 0.5)])).toEqual({
+      min: { x: -100, y: -25 },
+      max: { x: 100, y: 25 },
+    });
+  });
+
+  it("handles a single item at a non-zero position", () => {
+    expect(calcItemsBoundingBox([item(200, 300, 40, 60)])).toEqual({
+      min: { x: 180, y: 270 },
+      max: { x: 220, y: 330 },
+    });
   });
 });

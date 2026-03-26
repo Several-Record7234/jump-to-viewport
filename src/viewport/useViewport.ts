@@ -12,6 +12,7 @@ import {
 } from '../helper/types';
 import { usePlayerContext } from '../context/PlayerContext';
 import { usePartyContext } from '../context/PartyContext';
+import { deriveFilteredPlayerIds, applyViewportDelete, calcItemsBoundingBox } from './viewportHelpers';
 
 const makeId = () => {
     return crypto.randomUUID();
@@ -96,6 +97,7 @@ const getPlayerImages = async (nonGMids: string[]) => {
     );
 };
 
+
 const defaultSceneMetadata: SceneMetadata = {
     [metadataId]: { starredViewports: [] },
 };
@@ -158,11 +160,8 @@ export const useViewport = () => {
         });
     };
     const deleteViewport = async (viewport: StarredLegacy | StarredBox) => {
-        const filtered = starred(metadata).filter((v) => v.id !== viewport.id);
         await OBR.scene.setMetadata({
-            [metadataId]: {
-                starredViewports: filtered.length ? filtered : undefined,
-            },
+            [metadataId]: { starredViewports: applyViewportDelete(starred(metadata), viewport.id) },
         });
     };
 
@@ -224,43 +223,10 @@ export const useViewport = () => {
 
     const jumpToPlayerItems = async () => {
         const items = await getPlayerImages(nonGMids);
-
-        let minX = Infinity;
-        let minY = Infinity;
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-
-        items.forEach((item) => {
-            const halfWidth = (item.image.width * item.scale.x) / 2;
-            const halfHeight = (item.image.height * item.scale.y) / 2;
-
-            const leftEdge = item.position.x - halfWidth;
-            const rightEdge = item.position.x + halfWidth;
-            const topEdge = item.position.y - halfHeight;
-            const bottomEdge = item.position.y + halfHeight;
-
-            if (leftEdge < minX) {
-                minX = leftEdge;
-            }
-            if (topEdge < minY) {
-                minY = topEdge;
-            }
-            if (rightEdge > maxX) {
-                maxX = rightEdge;
-            }
-            if (bottomEdge > maxY) {
-                maxY = bottomEdge;
-            }
-        });
-
-        await jumpToBoundingBox({
-            boundingCorners: { max: { x: maxX, y: maxY }, min: { x: minX, y: minY } },
-        });
+        await jumpToBoundingBox({ boundingCorners: calcItemsBoundingBox(items) });
     };
 
-    const filteredPlayerIds = Object.entries(localFilters.players)
-        .filter(([, show]) => !show)
-        .map(([id]) => id);
+    const filteredPlayerIds = deriveFilteredPlayerIds(localFilters.players);
 
     return {
         starredViewports: starred(metadata),
