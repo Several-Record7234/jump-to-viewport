@@ -1,5 +1,5 @@
 import { Player } from '@owlbear-rodeo/sdk';
-import { StarredBox, StarredLegacy, ViewportHandler } from 'helper/types';
+import { StarredBox, StarredLegacy, ViewportHandler } from '../helper/types';
 import { ViewportControl } from './ViewportControl';
 
 type PlayerControlProps = {

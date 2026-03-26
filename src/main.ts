@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client';
 import React from 'react';
-import './css/main.scss';
+import './index.css';
 import { Views } from './components/Views.tsx';
 
 const root = ReactDOM.createRoot(<HTMLElement>document.querySelector('#app'));

@@ -111,10 +111,10 @@ const Content = () => {
                                     style={
                                         showAbsentPlayers
                                             ? {
-                                                  backgroundColor: '#111',
-                                                  borderColor: '#111',
+                                                  backgroundColor: 'var(--color-crust)',
+                                                  borderColor: 'var(--color-crust)',
                                               }
-                                            : { borderColor: '#111' }
+                                            : { borderColor: 'var(--color-crust)' }
                                     }></span>
                             </label>
                         </div>

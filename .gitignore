@@ -1,26 +1,22 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+node_modules/
+dist/
+*.tsbuildinfo
 
-node_modules
-dist
-dist-ssr
-*.local
+# Claude-related files
+.claude/
+CLAUDE.md
+progress.md
+user-tests.md
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 
+# Environment
 .env
+.env.*

@@ -1,4 +1,4 @@
-import { StarredBox, StarredLegacy, ViewportHandler } from 'helper/types';
+import { StarredBox, StarredLegacy, ViewportHandler } from '../helper/types';
 import { useState } from 'react';
 import { Button } from './atoms/Button';
 import { Icon } from './atoms/Icon';
